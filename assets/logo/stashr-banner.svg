@@ -1,0 +1,95 @@
+<svg width="2560" height="800" viewBox="0 0 1280 400" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="stashr — the .NET-native secrets engine">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#0A1124"/>
+      <stop offset="0.55" stop-color="#0E2047"/>
+      <stop offset="1" stop-color="#143A72"/>
+    </linearGradient>
+    <radialGradient id="glow" cx="0.5" cy="0.5" r="0.5">
+      <stop offset="0" stop-color="#2E6BD6" stop-opacity="0.55"/>
+      <stop offset="1" stop-color="#2E6BD6" stop-opacity="0"/>
+    </radialGradient>
+    <radialGradient id="glow2" cx="0.5" cy="0.5" r="0.5">
+      <stop offset="0" stop-color="#3E86FF" stop-opacity="0.5"/>
+      <stop offset="1" stop-color="#3E86FF" stop-opacity="0"/>
+    </radialGradient>
+    <linearGradient id="g" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#4D8DFF"/>
+      <stop offset="1" stop-color="#1858C4"/>
+    </linearGradient>
+    <filter id="soft" x="-60%" y="-60%" width="220%" height="220%">
+      <feGaussianBlur stdDeviation="26"/>
+    </filter>
+    <filter id="shadow" x="-40%" y="-40%" width="180%" height="180%">
+      <feDropShadow dx="0" dy="16" stdDeviation="26" flood-color="#04070F" flood-opacity="0.55"/>
+    </filter>
+  </defs>
+
+  <rect x="0" y="0" width="1280" height="400" fill="url(#bg)"/>
+  <rect x="0" y="0" width="1280" height="4" fill="#C2A45A"/>
+
+  <!-- ambient glows -->
+  <ellipse cx="250" cy="180" rx="300" ry="210" fill="url(#glow)" filter="url(#soft)"/>
+  <ellipse cx="980" cy="150" rx="320" ry="240" fill="url(#glow2)" filter="url(#soft)"/>
+
+  <!-- floating console mock (tilted) -->
+  <g transform="rotate(-4 980 205)">
+    <rect x="745" y="70" width="470" height="290" rx="16" fill="#0E1C32" stroke="#22324F" stroke-width="1" filter="url(#shadow)"/>
+    <circle cx="770" cy="92" r="5" fill="#F0726A"/>
+    <circle cx="788" cy="92" r="5" fill="#E0A23B"/>
+    <circle cx="806" cy="92" r="5" fill="#3ECF8E"/>
+    <rect x="745" y="110" width="470" height="1" fill="#22324F"/>
+    <!-- sidebar -->
+    <rect x="745" y="111" width="116" height="249" fill="#091222"/>
+    <g>
+      <rect x="761" y="128" width="26" height="26" rx="7" fill="url(#g)"/>
+      <circle cx="774" cy="141" r="5.7" fill="#fff"/>
+      <circle cx="774" cy="141" r="3.6" fill="url(#g)"/>
+      <rect x="773" y="134" width="1.2" height="14" fill="#fff"/>
+      <rect x="767" y="140.4" width="14" height="1.2" fill="#fff"/>
+    </g>
+    <rect x="761" y="172" width="86" height="20" rx="6" fill="#1F6FEB"/>
+    <rect x="761" y="200" width="86" height="20" rx="6" fill="#16233C"/>
+    <rect x="761" y="228" width="86" height="20" rx="6" fill="#16233C"/>
+    <rect x="761" y="256" width="86" height="20" rx="6" fill="#16233C"/>
+    <rect x="761" y="284" width="86" height="20" rx="6" fill="#16233C"/>
+    <!-- content -->
+    <rect x="879" y="128" width="318" height="30" rx="8" fill="#16233C"/>
+    <rect x="879" y="172" width="100" height="74" rx="10" fill="#13223B"/>
+    <rect x="895" y="188" width="46" height="12" rx="6" fill="#3ECF8E"/>
+    <rect x="895" y="212" width="64" height="8" rx="4" fill="#2A3A57"/>
+    <rect x="989" y="172" width="100" height="74" rx="10" fill="#13223B"/>
+    <rect x="1005" y="188" width="46" height="12" rx="6" fill="#4D8DFF"/>
+    <rect x="1005" y="212" width="64" height="8" rx="4" fill="#2A3A57"/>
+    <rect x="1099" y="172" width="98" height="74" rx="10" fill="#13223B"/>
+    <rect x="1115" y="188" width="46" height="12" rx="6" fill="#C2A45A"/>
+    <rect x="1115" y="212" width="60" height="8" rx="4" fill="#2A3A57"/>
+    <rect x="879" y="260" width="318" height="80" rx="10" fill="#13223B"/>
+    <rect x="897" y="280" width="120" height="9" rx="4" fill="#2A3A57"/>
+    <rect x="897" y="300" width="280" height="7" rx="3" fill="#22324F"/>
+    <rect x="897" y="316" width="240" height="7" rx="3" fill="#22324F"/>
+  </g>
+
+  <!-- brand mark with glow -->
+  <ellipse cx="118" cy="168" rx="88" ry="88" fill="#2E6BD6" opacity="0.55" filter="url(#soft)"/>
+  <rect x="70" y="120" width="96" height="96" rx="24" fill="url(#g)"/>
+  <circle cx="118" cy="168" r="21.1" fill="#ffffff"/>
+  <circle cx="118" cy="168" r="13.4" fill="url(#g)"/>
+  <rect x="115.9" y="144" width="4.2" height="48" rx="2" fill="#ffffff"/>
+  <rect x="94" y="165.9" width="48" height="4.2" rx="2" fill="#ffffff"/>
+  <circle cx="118" cy="168" r="5.1" fill="#ffffff"/>
+
+  <!-- wordmark -->
+  <text x="190" y="190" font-family="Segoe UI, Helvetica, Arial, sans-serif" font-size="66" font-weight="800" letter-spacing="-2" fill="#ffffff">stashr</text>
+  <text x="193" y="234" font-family="Georgia, 'Times New Roman', serif" font-size="23" font-style="italic" fill="#6CA0FF">The .NET-native secrets engine</text>
+
+  <!-- chips -->
+  <g font-family="Segoe UI, Helvetica, Arial, sans-serif" font-size="13" fill="#C9D6EA">
+    <rect x="193" y="270" width="112" height="29" rx="14.5" fill="#0E1B30" stroke="#28354F"/>
+    <text x="249" y="289" text-anchor="middle">Open-source</text>
+    <rect x="315" y="270" width="146" height="29" rx="14.5" fill="#0E1B30" stroke="#28354F"/>
+    <text x="388" y="289" text-anchor="middle">Vault-compatible</text>
+    <rect x="471" y="270" width="120" height="29" rx="14.5" fill="#0E1B30" stroke="#C2A45A"/>
+    <text x="531" y="289" text-anchor="middle" fill="#C2A45A">v0.9.0 · pre-audit</text>
+  </g>
+</svg>

@@ -1,0 +1,22 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <!-- The `stashr` operator CLI (ADR-0014). Packable as a dotnet tool: `dotnet tool install`
+       then `stashr ...`. Talks to the server's HTTP API via Stashr.Client. -->
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>net10.0</TargetFramework>
+    <AssemblyName>stashr</AssemblyName>
+    <RootNamespace>Stashr.Cli</RootNamespace>
+    <PackAsTool>true</PackAsTool>
+    <ToolCommandName>stashr</ToolCommandName>
+    <PackageId>Stashr.Cli</PackageId>
+    <Description>The stashr operator CLI — install as a dotnet tool: `dotnet tool install --global Stashr.Cli`.</Description>
+    <IsPackable>true</IsPackable>
+    <PackageTags>stashr;secrets;cli;dotnet-tool;vault</PackageTags>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Stashr.Client\Stashr.Client.csproj" />
+  </ItemGroup>
+
+</Project>

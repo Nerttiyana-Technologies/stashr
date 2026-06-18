@@ -1,0 +1,16 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <!-- Server-side crypto (uses AesGcm, NativeMemory, pinned alloc) — modern TFMs only;
+       netstandard2.0 lacks these APIs. ADR-0004/0015. -->
+  <PropertyGroup>
+    <TargetFrameworks>net10.0;net8.0</TargetFrameworks>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+    <PackageId>Stashr.Crypto</PackageId>
+    <Description>FIPS-aware crypto provider, envelope encryption, Shamir, and secure memory for stashr.</Description>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Stashr.Core\Stashr.Core.csproj" />
+  </ItemGroup>
+
+</Project>

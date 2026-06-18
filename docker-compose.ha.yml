@@ -1,0 +1,38 @@
+# Two-node HA demo: PostgreSQL + two stashr nodes sharing it (active/standby, auto-unseal).
+#   docker compose -f docker-compose.ha.yml up --build
+#   # initialize once (either node); the leader auto-unseals, the standby auto-unseals on takeover:
+#   curl -s -X POST http://localhost:8080/v1/sys/init -H 'Content-Type: application/json' -d '{}'
+#   # watch failover: stop the active node and the standby is promoted within a few seconds:
+#   docker compose -f docker-compose.ha.yml stop stashr-1
+#
+# NOTE: the auto-unseal key below is a DEMO value — never reuse it. In production, inject a real
+# 32-byte base64 key from your secrets pipeline / KMS / HSM, kept outside the stashr store.
+x-stashr-env: &stashr-env
+  Stashr__Storage: Postgres
+  Stashr__Postgres__ConnectionString: "Host=postgres;Database=stashr;Username=postgres;Password=stashr"
+  Stashr__Ha__Enabled: "true"
+  Stashr__AutoUnseal__Key: "c3Rhc2hyX2RlbW9fdW5zZWFsX2tleV8wMTIzNDU2ISE="
+
+services:
+  postgres:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: stashr
+      POSTGRES_DB: stashr
+    ports:
+      - "5432:5432"
+
+  stashr-1:
+    build: .
+    depends_on: [postgres]
+    environment: *stashr-env
+    ports:
+      - "8080:8080"
+
+  stashr-2:
+    build: .
+    depends_on: [postgres]
+    environment: *stashr-env
+    ports:
+      - "8081:8080"

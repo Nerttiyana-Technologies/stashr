@@ -1,0 +1,66 @@
+@page "/audit"
+@inject StashrApi Api
+
+<PageTitle>Audit log — stashr</PageTitle>
+
+<div class="page-head">
+    <h1>Audit log</h1>
+    <p class="muted">Every entry is HMAC-chained to the previous one — any tampering breaks the chain.</p>
+</div>
+
+<div class="card">
+    <div class="card__head">
+        <h2>Hash-chain integrity</h2>
+        <button class="btn btn--primary btn--sm" disabled="@_busy" @onclick="Verify">@(_busy ? "Verifying…" : "Verify now")</button>
+    </div>
+    <div class="card__body">
+        @if (_result is null && _error is null)
+        {
+            <p class="muted">Run a verification to check the audit chain.</p>
+        }
+        else if (_error is not null)
+        {
+            <div class="alert alert--danger">@_error</div>
+        }
+        else if (_result is not null)
+        {
+            <div class="grid grid--stats">
+                <div class="stat">
+                    <div class="stat__label">Result</div>
+                    <div class="stat__value" style="display:flex;align-items:center;gap:10px;">
+                        @if (_result.Valid)
+                        {
+                            <span class="pill pill--ok">Intact</span>
+                        }
+                        else
+                        {
+                            <span class="pill pill--danger">Broken</span>
+                        }
+                    </div>
+                </div>
+                <div class="stat">
+                    <div class="stat__label">Entries checked</div>
+                    <div class="stat__value">@_result.CheckedCount</div>
+                </div>
+                <div class="stat">
+                    <div class="stat__label">First broken sequence</div>
+                    <div class="stat__value">@(_result.FirstBrokenSeq?.ToString() ?? "—")</div>
+                </div>
+            </div>
+        }
+    </div>
+</div>
+
+@code {
+    private AuditVerifyDto? _result;
+    private bool _busy;
+    private string? _error;
+
+    private async Task Verify()
+    {
+        _busy = true; _error = null;
+        try { _result = await Api.AuditVerifyAsync(); }
+        catch (Exception ex) { _error = ex.Message; }
+        finally { _busy = false; }
+    }
+}

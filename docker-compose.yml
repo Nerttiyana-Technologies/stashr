@@ -1,0 +1,23 @@
+# Single-node dev stack: PostgreSQL + stashr (dev mode, Postgres-backed).
+#   docker compose up --build
+# The server logs a one-time root token; the API is on http://localhost:8080.
+services:
+  postgres:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: stashr
+      POSTGRES_DB: stashr
+    ports:
+      - "5432:5432"
+
+  stashr:
+    build: .
+    depends_on:
+      - postgres
+    environment:
+      ASPNETCORE_ENVIRONMENT: Development
+      Stashr__Storage: Postgres
+      Stashr__Postgres__ConnectionString: "Host=postgres;Database=stashr;Username=postgres;Password=stashr"
+    ports:
+      - "8080:8080"

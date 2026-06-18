@@ -1,0 +1,28 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <!--
+    Stashr.Core: contracts + domain models only. NO I/O dependencies (enforced later by
+    a NetArchTest gate, ADR-0014). Multi-targeted so the .NET Framework ConfigurationBuilder
+    (ADR-0013) and modern consumers can both reference it (net48 consumes netstandard2.0).
+  -->
+  <PropertyGroup>
+    <TargetFrameworks>net10.0;net8.0;netstandard2.0</TargetFrameworks>
+    <PackageId>Stashr.Core</PackageId>
+    <Description>Core contracts and domain models for stashr (a fully .NET secrets engine).</Description>
+  </PropertyGroup>
+  <ItemGroup>
+    <PackageReference Include="Synthetix" Version="0.1.0">
+      <PrivateAssets>all</PrivateAssets>
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+    </PackageReference>
+  </ItemGroup>
+
+  <!-- netstandard2.0 lacks Span/ReadOnlySpan and IAsyncEnumerable; bring them in for that
+       leg only. net8.0/net10.0 have them built in. Required-member + init polyfills live in
+       Compatibility/. -->
+  <ItemGroup Condition="'$(TargetFramework)' == 'netstandard2.0'">
+    <PackageReference Include="System.Memory" Version="4.6.3" />
+    <PackageReference Include="Microsoft.Bcl.AsyncInterfaces" Version="10.0.8" />
+  </ItemGroup>
+
+</Project>

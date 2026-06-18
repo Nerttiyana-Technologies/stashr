@@ -1,0 +1,27 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <!-- Classic .NET Framework ConfigurationBuilder (ADR-0013): lets legacy app.config / web.config
+       apps resolve appSettings & connectionStrings from stashr instead of storing plaintext.
+       Targets net48 only; builds cross-platform via reference assemblies. -->
+  <PropertyGroup>
+    <TargetFramework>net48</TargetFramework>
+    <Nullable>disable</Nullable>
+    <!-- Legacy interop shim: relax the repo-wide warnings-as-errors for the net48 leg. -->
+    <TreatWarningsAsErrors>false</TreatWarningsAsErrors>
+    <PackageId>Stashr.Configuration.Legacy</PackageId>
+    <Description>.NET Framework 4.8 ConfigurationBuilder that resolves app.config / web.config appSettings and connectionStrings from the stashr secrets engine.</Description>
+    <IsPackable>true</IsPackable>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.NETFramework.ReferenceAssemblies" Version="1.0.3" PrivateAssets="all" />
+    <PackageReference Include="Microsoft.Configuration.ConfigurationBuilders.Base" Version="3.0.0" />
+    <PackageReference Include="System.Text.Json" Version="8.0.5" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Reference Include="System.Configuration" />
+    <Reference Include="System.Net.Http" />
+  </ItemGroup>
+
+</Project>

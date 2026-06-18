@@ -1,0 +1,86 @@
+@inject StashrApi Api
+@inject AuthState Auth
+
+<div class="auth-screen">
+    <div class="auth-card">
+        <div class="auth-card__brand"><BrandMark /> <span>stashr</span></div>
+        <h2 class="auth-card__title">Sign in</h2>
+
+        <div class="tabs" style="margin-bottom:var(--space-4);">
+            <button class="tab @(_mode == "token" ? "tab--active" : "")" @onclick='() => SetMode("token")'>Token</button>
+            <button class="tab @(_mode == "approle" ? "tab--active" : "")" @onclick='() => SetMode("approle")'>AppRole</button>
+        </div>
+
+        @if (_mode == "token")
+        {
+            <div class="field">
+                <label class="field__label">Token</label>
+                <input class="input mono" type="password" @bind="_token" @bind:event="oninput"
+                       @onkeydown="OnKey" placeholder="root or service token" />
+            </div>
+        }
+        else
+        {
+            <div class="field">
+                <label class="field__label">Role ID</label>
+                <input class="input mono" @bind="_roleId" placeholder="role_id" />
+            </div>
+            <div class="field">
+                <label class="field__label">Secret ID</label>
+                <input class="input mono" type="password" @bind="_secretId" placeholder="secret_id" />
+            </div>
+        }
+
+        @if (_error is not null)
+        {
+            <div class="alert alert--danger" style="margin-bottom:var(--space-4);">@_error</div>
+        }
+
+        <button class="btn btn--primary" style="width:100%;" disabled="@_busy" @onclick="SignIn">
+            @(_busy ? "Signing in…" : "Sign in")
+        </button>
+    </div>
+</div>
+
+@code {
+    private string _mode = "token";
+    private string _token = "";
+    private string _roleId = "";
+    private string _secretId = "";
+    private bool _busy;
+    private string? _error;
+
+    private void SetMode(string m) { _mode = m; _error = null; }
+
+    private async Task OnKey(KeyboardEventArgs e)
+    {
+        if (e.Key == "Enter") await SignIn();
+    }
+
+    private async Task SignIn()
+    {
+        _error = null;
+        _busy = true;
+        try
+        {
+            if (_mode == "token")
+            {
+                if (string.IsNullOrWhiteSpace(_token)) { _error = "Enter a token."; return; }
+                if (await Api.ValidateTokenAsync(_token.Trim()))
+                    await Auth.SignInAsync(_token.Trim());
+                else
+                    _error = "That token was rejected.";
+            }
+            else
+            {
+                if (string.IsNullOrWhiteSpace(_roleId) || string.IsNullOrWhiteSpace(_secretId))
+                { _error = "Enter both role_id and secret_id."; return; }
+                var token = await Api.AppRoleLoginAsync(_roleId.Trim(), _secretId.Trim());
+                if (!string.IsNullOrEmpty(token)) await Auth.SignInAsync(token);
+                else _error = "Login failed.";
+            }
+        }
+        catch (Exception ex) { _error = ex.Message; }
+        finally { _busy = false; }
+    }
+}

@@ -1,0 +1,39 @@
+<Project>
+
+  <!-- Common build settings for all stashr projects. See internal ADR-0014. -->
+  <PropertyGroup>
+    <LangVersion>latest</LangVersion>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
+    <GenerateDocumentationFile>true</GenerateDocumentationFile>
+    <!-- 1591 = missing XML doc comment; we don't require docs on every member yet. -->
+    <NoWarn>$(NoWarn);1591</NoWarn>
+    <Deterministic>true</Deterministic>
+    <ContinuousIntegrationBuild Condition="'$(CI)' == 'true'">true</ContinuousIntegrationBuild>
+    <Authors>Suresh Subramanian</Authors>
+    <Company>Nerttiyana Technologies</Company>
+    <Product>stashr</Product>
+    <PackageLicenseExpression>Apache-2.0</PackageLicenseExpression>
+    <Copyright>Copyright 2026 Suresh Subramanian</Copyright>
+
+    <!-- Release version for all packages (override per-build with -p:Version=…). -->
+    <Version>0.9.0</Version>
+
+    <!-- NuGet package metadata (applied to projects that opt in with IsPackable=true). -->
+    <PackageProjectUrl>https://github.com/Nerttiyana-Technologies/stashr</PackageProjectUrl>
+    <RepositoryUrl>https://github.com/Nerttiyana-Technologies/stashr</RepositoryUrl>
+    <RepositoryType>git</RepositoryType>
+    <PackageTags>stashr;secrets;secrets-management;vault;security;dotnet;configuration</PackageTags>
+    <PublishRepositoryUrl>true</PublishRepositoryUrl>
+    <IncludeSymbols>true</IncludeSymbols>
+    <SymbolPackageFormat>snupkg</SymbolPackageFormat>
+
+    <!-- Only the consumer-facing libraries + CLI ship as packages; everything else opts out. -->
+    <IsPackable>false</IsPackable>
+  </PropertyGroup>
+
+  <!-- README packing lives in Directory.Build.targets (imported last) so it sees the final
+       per-project IsPackable value. -->
+
+</Project>

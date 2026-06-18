@@ -1,0 +1,132 @@
+@page "/transit"
+@inject StashrApi Api
+@inject IJSRuntime JS
+
+<PageTitle>Transit — stashr</PageTitle>
+
+<div class="page-head">
+    <h1>Transit</h1>
+    <p class="muted">Encryption as a service. Plaintext is never stored — only encrypted and returned.</p>
+</div>
+
+<div class="card" style="margin-bottom:var(--space-5);">
+    <div class="card__head"><h2>Keys</h2></div>
+    <div class="card__body" style="display:flex;gap:var(--space-3);align-items:flex-end;">
+        <div class="field" style="margin:0;flex:1;max-width:320px;">
+            <label class="field__label">Create a named key</label>
+            <input class="input mono" @bind="_keyName" placeholder="e.g. orders" />
+        </div>
+        <button class="btn btn--primary" disabled="@_keyBusy" @onclick="CreateKey">Create key</button>
+        @if (_keyMsg is not null)
+        {
+            <span class="pill pill--ok" style="margin-bottom:6px;">@_keyMsg</span>
+        }
+    </div>
+</div>
+
+<div class="grid grid--2">
+    <div class="card">
+        <div class="card__head"><h2>Encrypt</h2></div>
+        <div class="card__body">
+            <div class="field">
+                <label class="field__label">Key name</label>
+                <input class="input mono" @bind="_encKey" placeholder="orders" />
+            </div>
+            <div class="field">
+                <label class="field__label">Plaintext</label>
+                <textarea class="textarea" @bind="_plaintext" placeholder="text to encrypt"></textarea>
+            </div>
+            <button class="btn btn--primary" disabled="@_encBusy" @onclick="Encrypt">Encrypt</button>
+            @if (_ciphertext is not null)
+            {
+                <div class="field" style="margin-top:var(--space-4);">
+                    <label class="field__label">Ciphertext</label>
+                    <div class="copy-row"><code>@_ciphertext</code><button class="btn btn--sm" @onclick="() => Copy(_ciphertext!)">Copy</button></div>
+                </div>
+            }
+            @if (_encError is not null)
+            {
+                <div class="alert alert--danger" style="margin-top:var(--space-4);">@_encError</div>
+            }
+        </div>
+    </div>
+
+    <div class="card">
+        <div class="card__head"><h2>Decrypt</h2></div>
+        <div class="card__body">
+            <div class="field">
+                <label class="field__label">Key name</label>
+                <input class="input mono" @bind="_decKey" placeholder="orders" />
+            </div>
+            <div class="field">
+                <label class="field__label">Ciphertext</label>
+                <textarea class="textarea" @bind="_cipherIn" placeholder="stashr:v1:…"></textarea>
+            </div>
+            <button class="btn btn--primary" disabled="@_decBusy" @onclick="Decrypt">Decrypt</button>
+            @if (_decrypted is not null)
+            {
+                <div class="field" style="margin-top:var(--space-4);">
+                    <label class="field__label">Plaintext</label>
+                    <div class="copy-row"><code>@_decrypted</code><button class="btn btn--sm" @onclick="() => Copy(_decrypted!)">Copy</button></div>
+                </div>
+            }
+            @if (_decError is not null)
+            {
+                <div class="alert alert--danger" style="margin-top:var(--space-4);">@_decError</div>
+            }
+        </div>
+    </div>
+</div>
+
+@code {
+    private string _keyName = "";
+    private bool _keyBusy;
+    private string? _keyMsg;
+
+    private string _encKey = "";
+    private string _plaintext = "";
+    private string? _ciphertext;
+    private bool _encBusy;
+    private string? _encError;
+
+    private string _decKey = "";
+    private string _cipherIn = "";
+    private string? _decrypted;
+    private bool _decBusy;
+    private string? _decError;
+
+    private async Task CreateKey()
+    {
+        if (string.IsNullOrWhiteSpace(_keyName)) return;
+        _keyBusy = true; _keyMsg = null;
+        try { await Api.CreateTransitKeyAsync(_keyName.Trim()); _keyMsg = $"key '{_keyName.Trim()}' ready"; }
+        catch (Exception ex) { _keyMsg = ex.Message; }
+        finally { _keyBusy = false; }
+    }
+
+    private async Task Encrypt()
+    {
+        _encBusy = true; _encError = null; _ciphertext = null;
+        try
+        {
+            var b64 = System.Convert.ToBase64String(System.Text.Encoding.UTF8.GetBytes(_plaintext));
+            _ciphertext = await Api.EncryptAsync(_encKey.Trim(), b64);
+        }
+        catch (Exception ex) { _encError = ex.Message; }
+        finally { _encBusy = false; }
+    }
+
+    private async Task Decrypt()
+    {
+        _decBusy = true; _decError = null; _decrypted = null;
+        try
+        {
+            var b64 = await Api.DecryptAsync(_decKey.Trim(), _cipherIn.Trim());
+            _decrypted = System.Text.Encoding.UTF8.GetString(System.Convert.FromBase64String(b64));
+        }
+        catch (Exception ex) { _decError = ex.Message; }
+        finally { _decBusy = false; }
+    }
+
+    private async Task Copy(string text) => await JS.InvokeVoidAsync("stashrClipboard.copy", text);
+}

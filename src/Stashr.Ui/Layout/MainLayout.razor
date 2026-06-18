@@ -1,0 +1,104 @@
+@inherits LayoutComponentBase
+@inject ThemeService Theme
+@inject AuthState Auth
+@inject AppState App
+@implements IDisposable
+
+@if (!_ready)
+{
+    <div class="app-loading">
+        <div class="app-loading__spinner"></div>
+        <div class="app-loading__text">Connecting to stashr…</div>
+    </div>
+}
+else if (App.Seal is null)
+{
+    <div class="auth-screen">
+        <div class="auth-card">
+            <div class="auth-card__brand"><BrandMark /> <span>stashr</span></div>
+            <div class="alert alert--danger" style="margin-bottom: var(--space-4);">
+                Couldn't reach the stashr API. @App.Error
+            </div>
+            <button class="btn btn--primary" style="width:100%;" @onclick="Reload">Retry</button>
+        </div>
+    </div>
+}
+else if (!App.Seal.Initialized || App.Seal.Sealed)
+{
+    <UnsealView />
+}
+else if (!Auth.IsAuthenticated)
+{
+    <LoginView />
+}
+else
+{
+    <div class="layout">
+        <NavMenu />
+        <div class="layout__main">
+            <header class="topbar">
+                <div class="topbar__title">
+                    <div class="crumb">stashr admin console</div>
+                </div>
+                <div class="topbar__actions">
+                    @if (App.Seal.HaRole is { Length: > 0 } role && role != "active")
+                    {
+                        <span class="pill pill--warn">@role</span>
+                    }
+                    <span class="pill pill--ok">Unsealed</span>
+                    <button class="icon-btn" title="Toggle light / dark theme" @onclick="ToggleTheme">
+                        @if (Theme.IsDark)
+                        {
+                            <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+                                <circle cx="12" cy="12" r="4" />
+                                <path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4" />
+                            </svg>
+                        }
+                        else
+                        {
+                            <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8z" />
+                            </svg>
+                        }
+                    </button>
+                    <button class="icon-btn" title="Sign out" @onclick="SignOut">
+                        <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4M16 17l5-5-5-5M21 12H9" />
+                        </svg>
+                    </button>
+                </div>
+            </header>
+            <main class="content">
+                @Body
+            </main>
+        </div>
+    </div>
+}
+
+@code {
+    private bool _ready;
+
+    protected override async Task OnInitializedAsync()
+    {
+        Theme.Changed += OnChanged;
+        Auth.Changed += OnChanged;
+        App.Changed += OnChanged;
+
+        await Theme.InitAsync();
+        await Auth.InitAsync();
+        await App.RefreshSealAsync();
+        _ready = true;
+    }
+
+    private async Task ToggleTheme() => await Theme.ToggleAsync();
+    private async Task SignOut() => await Auth.SignOutAsync();
+    private async Task Reload() => await App.RefreshSealAsync();
+    private void OnChanged() => StateHasChanged();
+
+    public void Dispose()
+    {
+        Theme.Changed -= OnChanged;
+        Auth.Changed -= OnChanged;
+        App.Changed -= OnChanged;
+    }
+}

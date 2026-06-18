@@ -427,3 +427,10 @@ FodyWeavers.xsd
 *.msix
 *.msm
 *.msp
+
+# Internal ideation / design docs — not for publication (ADRs, pitch deck, planning)
+internal/
+
+# OS / IDE junk — never publish
+.DS_Store
+.idea/

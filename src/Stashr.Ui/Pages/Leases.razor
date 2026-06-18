@@ -1,0 +1,67 @@
+@page "/leases"
+@inject StashrApi Api
+
+<PageTitle>Leases — stashr</PageTitle>
+
+<div class="page-head" style="display:flex;justify-content:space-between;align-items:flex-end;">
+    <div>
+        <h1>Leases</h1>
+        <p class="muted">Active leases for dynamic credentials. Revoke to invalidate immediately.</p>
+    </div>
+    <button class="btn" @onclick="Load">Refresh</button>
+</div>
+
+<div class="card">
+    <div class="card__body" style="padding:0;">
+        @if (_loading)
+        {
+            <p class="muted" style="padding:var(--space-5);">Loading…</p>
+        }
+        else if (_error is not null)
+        {
+            <div class="alert alert--danger" style="margin:var(--space-4);">@_error</div>
+        }
+        else if (_leases.Count == 0)
+        {
+            <div class="empty-state"><p class="muted">No active leases.</p></div>
+        }
+        else
+        {
+            <table class="table">
+                <thead><tr><th>Lease ID</th><th style="width:1%;"></th></tr></thead>
+                <tbody>
+                    @foreach (var id in _leases)
+                    {
+                        <tr>
+                            <td class="mono">@id</td>
+                            <td><button class="btn btn--danger btn--sm" @onclick="() => Revoke(id)">Revoke</button></td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        }
+    </div>
+</div>
+
+@code {
+    private List<string> _leases = new();
+    private bool _loading = true;
+    private string? _error;
+
+    protected override Task OnInitializedAsync() => Load();
+
+    private async Task Load()
+    {
+        _loading = true; _error = null;
+        try { _leases = (await Api.LeasesAsync()).ToList(); }
+        catch (Exception ex) { _error = ex.Message; }
+        finally { _loading = false; }
+    }
+
+    private async Task Revoke(string id)
+    {
+        _error = null;
+        try { await Api.RevokeLeaseAsync(id); await Load(); }
+        catch (Exception ex) { _error = ex.Message; }
+    }
+}
