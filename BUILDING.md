@@ -145,11 +145,13 @@ dotnet tool install --global --add-source ./src/Stashr.Cli/bin/Release Stashr.Cl
 stashr status
 ```
 
-**3. Self-contained single binary (the server).** No .NET runtime needed on the target host.
+**3. Self-contained build (the server).** No .NET runtime needed on the target host. (Not
+`PublishSingleFile` — that property would cascade into the hosted Blazor WASM client, which
+can't be a desktop single-file.)
 
 ```bash
 dotnet publish src/Stashr.Server -c Release -r linux-x64 \
-  --self-contained -p:PublishSingleFile=true -o ./publish
+  --self-contained -o ./publish
 # also: osx-arm64, win-x64
 ./publish/Stashr.Server
 ```

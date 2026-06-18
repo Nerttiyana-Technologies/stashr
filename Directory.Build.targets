@@ -1,13 +1,15 @@
 <Project>
 
   <!-- Imported after each project body, so $(IsPackable) reflects the project's own value.
-       Embeds the repo README into shipping packages so nuget.org shows project docs. -->
+       Packs a Markdown-only README (docs/package-readme.md) as the package README — nuget.org
+       renders Markdown but strips raw HTML, so the GitHub README (HTML header/badges) can't be
+       reused here. Packaged as README.md to match PackageReadmeFile. -->
   <PropertyGroup Condition="'$(IsPackable)' == 'true'">
     <PackageReadmeFile>README.md</PackageReadmeFile>
   </PropertyGroup>
 
   <ItemGroup Condition="'$(IsPackable)' == 'true'">
-    <None Include="$(MSBuildThisFileDirectory)README.md" Pack="true" PackagePath="\" Visible="false" />
+    <None Include="$(MSBuildThisFileDirectory)docs/package-readme.md" Pack="true" PackagePath="README.md" Visible="false" />
   </ItemGroup>
 
 </Project>
