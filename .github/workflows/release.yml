@@ -1,0 +1,87 @@
+name: release
+
+# Tagging v* publishes the artifacts so users consume packages, not source:
+#   - NuGet:  Stashr.Client, Stashr.Configuration, Stashr.Configuration.Legacy, Stashr.Cli (tool)
+#   - Docker: ghcr.io/<owner>/stashr:<version> and :latest
+#   - GitHub Release: self-contained server binaries (linux-x64, win-x64, osx-arm64)
+on:
+  push:
+    tags: ["v*"]
+
+permissions:
+  contents: write   # upload release assets
+  packages: write   # push to GHCR
+
+jobs:
+  nuget:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-dotnet@v4
+        with:
+          global-json-file: global.json
+      - name: Derive version from tag
+        run: echo "VERSION=${GITHUB_REF_NAME#v}" >> "$GITHUB_ENV"
+      - name: Pack
+        run: |
+          for p in Stashr.Client Stashr.Configuration Stashr.Configuration.Legacy Stashr.Cli; do
+            dotnet pack "src/$p/$p.csproj" -c Release -p:Version="$VERSION" -o artifacts
+          done
+      - name: Push to nuget.org
+        env:
+          NUGET_API_KEY: ${{ secrets.NUGET_API_KEY }}
+        run: |
+          dotnet nuget push "artifacts/*.nupkg" \
+            --api-key "$NUGET_API_KEY" \
+            --source https://api.nuget.org/v3/index.json \
+            --skip-duplicate
+      - uses: actions/upload-artifact@v4
+        with:
+          name: nuget-packages
+          path: artifacts/*.nupkg
+
+  docker:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Derive version + lowercase image name
+        run: |
+          echo "VERSION=${GITHUB_REF_NAME#v}" >> "$GITHUB_ENV"
+          echo "IMAGE=ghcr.io/${GITHUB_REPOSITORY,,}" >> "$GITHUB_ENV"
+      - uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+      - uses: docker/build-push-action@v6
+        with:
+          context: .
+          push: true
+          tags: |
+            ${{ env.IMAGE }}:${{ env.VERSION }}
+            ${{ env.IMAGE }}:latest
+
+  binaries:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        rid: [linux-x64, win-x64, osx-arm64]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-dotnet@v4
+        with:
+          global-json-file: global.json
+      - name: Derive version
+        run: echo "VERSION=${GITHUB_REF_NAME#v}" >> "$GITHUB_ENV"
+      - name: Publish self-contained server
+        run: |
+          dotnet publish src/Stashr.Server -c Release -r ${{ matrix.rid }} \
+            --self-contained -p:PublishSingleFile=true -p:Version="$VERSION" \
+            -o "publish/${{ matrix.rid }}"
+      - name: Package
+        run: |
+          cd "publish/${{ matrix.rid }}"
+          zip -r "../../stashr-${VERSION}-${{ matrix.rid }}.zip" .
+      - uses: softprops/action-gh-release@v2
+        with:
+          files: stashr-*.zip

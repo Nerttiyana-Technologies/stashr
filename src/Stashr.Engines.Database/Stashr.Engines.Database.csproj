@@ -1,0 +1,20 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <!-- Dynamic database secrets engine (ADR-0009/0006). Lives in its own assembly because it
+       needs Npgsql, which the arch gate forbids in Stashr.Engine. Mounted by the host. -->
+  <PropertyGroup>
+    <TargetFrameworks>net10.0;net8.0</TargetFrameworks>
+    <PackageId>Stashr.Engines.Database</PackageId>
+    <Description>Dynamic PostgreSQL credential engine for stashr (short-lived, auto-revoked creds).</Description>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Npgsql" Version="10.0.3" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Stashr.Core\Stashr.Core.csproj" />
+    <ProjectReference Include="..\Stashr.Engine\Stashr.Engine.csproj" />
+  </ItemGroup>
+
+</Project>

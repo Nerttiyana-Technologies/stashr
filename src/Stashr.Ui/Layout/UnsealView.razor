@@ -1,0 +1,137 @@
+@inject StashrApi Api
+@inject AppState App
+@inject AuthState Auth
+@inject IJSRuntime JS
+
+<div class="auth-screen">
+    <div class="auth-card">
+        <div class="auth-card__brand"><BrandMark /> <span>stashr</span></div>
+
+        @if (App.Seal is { Initialized: false })
+        {
+            @if (_init is null)
+            {
+                <h2 class="auth-card__title">Initialize stashr</h2>
+                <p class="muted auth-card__sub">
+                    First-time setup. The master key is split into Shamir shares; a threshold of them
+                    is required to unseal.
+                </p>
+                <div class="field">
+                    <label class="field__label">Key shares</label>
+                    <input class="input" type="number" min="1" max="20" @bind="_shares" />
+                </div>
+                <div class="field">
+                    <label class="field__label">Unseal threshold</label>
+                    <input class="input" type="number" min="1" max="20" @bind="_threshold" />
+                </div>
+                @if (_error is not null)
+                {
+                    <div class="alert alert--danger" style="margin-bottom:var(--space-4);">@_error</div>
+                }
+                <button class="btn btn--primary" style="width:100%;" disabled="@_busy" @onclick="DoInit">
+                    @(_busy ? "Initializing…" : "Initialize")
+                </button>
+            }
+            else
+            {
+                <h2 class="auth-card__title">Save your keys</h2>
+                <div class="alert alert--warn" style="margin-bottom:var(--space-4);">
+                    Shown only once. Store the root token and unseal keys securely before continuing.
+                </div>
+                <div class="field">
+                    <label class="field__label">Root token</label>
+                    <div class="copy-row">
+                        <code>@_init.RootToken</code>
+                        <button class="btn btn--sm" @onclick="() => Copy(_init.RootToken)">Copy</button>
+                    </div>
+                </div>
+                <div class="field">
+                    <label class="field__label">Unseal keys (@_init.SecretThreshold of @_init.SecretShares needed)</label>
+                    @foreach (var k in _init.Keys)
+                    {
+                        <div class="copy-row" style="margin-bottom:6px;">
+                            <code>@k</code>
+                            <button class="btn btn--sm" @onclick="() => Copy(k)">Copy</button>
+                        </div>
+                    }
+                </div>
+                <button class="btn btn--primary" style="width:100%;" @onclick="ContinueAfterInit">
+                    I've saved them — continue
+                </button>
+            }
+        }
+        else
+        {
+            <h2 class="auth-card__title">Unseal stashr</h2>
+            <p class="muted auth-card__sub">
+                Provide unseal keys one at a time until the threshold is reached.
+            </p>
+            <div class="progress" style="margin-bottom:var(--space-4);">
+                <div class="progress__bar" style="width:@(Percent)%;"></div>
+            </div>
+            <p class="faint" style="margin-bottom:var(--space-4);">
+                Progress @( App.Seal?.Progress ?? 0 ) / @( App.Seal?.Threshold ?? 0 )
+            </p>
+            <div class="field">
+                <label class="field__label">Unseal key</label>
+                <input class="input mono" type="password" @bind="_key" @bind:event="oninput"
+                       @onkeydown="OnKey" placeholder="paste an unseal key" />
+            </div>
+            @if (_error is not null)
+            {
+                <div class="alert alert--danger" style="margin-bottom:var(--space-4);">@_error</div>
+            }
+            <button class="btn btn--primary" style="width:100%;" disabled="@_busy" @onclick="SubmitKey">
+                @(_busy ? "Submitting…" : "Submit key")
+            </button>
+        }
+    </div>
+</div>
+
+@code {
+    private int _shares = 5;
+    private int _threshold = 3;
+    private string _key = "";
+    private bool _busy;
+    private string? _error;
+    private InitResultDto? _init;
+
+    private int Percent => App.Seal is { Threshold: > 0 } s ? (int)(100.0 * s.Progress / s.Threshold) : 0;
+
+    private async Task DoInit()
+    {
+        _error = null;
+        _busy = true;
+        try { _init = await Api.InitAsync(_shares, _threshold); }
+        catch (Exception ex) { _error = ex.Message; }
+        finally { _busy = false; }
+    }
+
+    private async Task ContinueAfterInit()
+    {
+        if (_init is not null) await Auth.SignInAsync(_init.RootToken);
+        await App.RefreshSealAsync();
+    }
+
+    private async Task OnKey(KeyboardEventArgs e)
+    {
+        if (e.Key == "Enter") await SubmitKey();
+    }
+
+    private async Task SubmitKey()
+    {
+        if (string.IsNullOrWhiteSpace(_key)) return;
+        _error = null;
+        _busy = true;
+        try
+        {
+            await Api.UnsealAsync(_key.Trim());
+            _key = "";
+            await App.RefreshSealAsync();
+        }
+        catch (Exception ex) { _error = ex.Message; }
+        finally { _busy = false; }
+    }
+
+    private async Task Copy(string text) => await JS.InvokeVoidAsync("stashrClipboard.copy", text);
+}

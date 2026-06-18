@@ -1,0 +1,18 @@
+<svg width="360" height="88" viewBox="0 0 360 88" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="stashr — .NET-native secrets engine">
+  <defs>
+    <linearGradient id="stashrG" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#4d8dff"/>
+      <stop offset="1" stop-color="#2f6fe0"/>
+    </linearGradient>
+  </defs>
+  <g transform="translate(8,12)">
+    <rect x="0" y="0" width="64" height="64" rx="16" fill="url(#stashrG)"/>
+    <circle cx="32" cy="32" r="14" fill="#0a0e14"/>
+    <circle cx="32" cy="32" r="9" fill="url(#stashrG)"/>
+    <rect x="30.6" y="16" width="2.8" height="32" rx="1.4" fill="#0a0e14"/>
+    <rect x="16" y="30.6" width="32" height="2.8" rx="1.4" fill="#0a0e14"/>
+    <circle cx="32" cy="32" r="3.4" fill="#0a0e14"/>
+  </g>
+  <text x="88" y="46" font-family="Segoe UI, -apple-system, Helvetica, Arial, sans-serif" font-size="40" font-weight="800" letter-spacing="-1.5" fill="#e8edf4">stashr</text>
+  <text x="90" y="68" font-family="Segoe UI, -apple-system, Helvetica, Arial, sans-serif" font-size="13.5" font-weight="500" letter-spacing="0.5" fill="#95a2b3">.NET-native secrets engine</text>
+</svg>

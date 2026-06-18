@@ -1,0 +1,209 @@
+@page "/policies"
+@inject StashrApi Api
+
+<PageTitle>Policies — stashr</PageTitle>
+
+<div class="page-head" style="display:flex;justify-content:space-between;align-items:flex-end;">
+    <div>
+        <h1>Policies</h1>
+        <p class="muted">Deny-by-default path capabilities, with an explain-access tester.</p>
+    </div>
+    <button class="btn btn--primary" @onclick="StartNew">New policy</button>
+</div>
+
+<div class="kv" style="margin-bottom:var(--space-5);">
+    <div class="card kv__list">
+        <div class="card__head"><h2>Policies</h2></div>
+        <div class="card__body" style="padding:var(--space-2);">
+            @if (_names.Count == 0)
+            {
+                <p class="muted" style="padding:var(--space-3);">No policies yet.</p>
+            }
+            else
+            {
+                @foreach (var n in _names)
+                {
+                    <button class="kv__item @(_name == n ? "kv__item--active" : "")" @onclick="() => Select(n)">
+                        <span class="kv__item-icon">§</span> @n
+                    </button>
+                }
+            }
+        </div>
+    </div>
+
+    <div class="card kv__detail">
+        @if (!_editing)
+        {
+            <div class="card__body"><div class="empty-state"><p class="muted">Select or create a policy.</p></div></div>
+        }
+        else
+        {
+            <div class="card__head">
+                <div>
+                    @if (_isNew)
+                    {
+                        <input class="input mono" style="max-width:240px;" @bind="_name" placeholder="policy name" />
+                    }
+                    else
+                    {
+                        <h2 class="mono">@_name</h2>
+                    }
+                </div>
+                <button class="btn btn--primary btn--sm" disabled="@_busy" @onclick="Save">Save</button>
+            </div>
+            <div class="card__body">
+                @foreach (var rule in _rules)
+                {
+                    <div class="policy-rule">
+                        <div class="field" style="margin-bottom:var(--space-2);">
+                            <input class="input mono" @bind="rule.Path" placeholder="path glob, e.g. secret/data/app/*" />
+                        </div>
+                        <div class="caps">
+                            @foreach (var cap in AllCaps)
+                            {
+                                <label class="cap">
+                                    <input type="checkbox" checked="@rule.Caps.Contains(cap)"
+                                           @onchange="e => ToggleCap(rule, cap, e)" />
+                                    @cap
+                                </label>
+                            }
+                            <button class="btn btn--ghost btn--sm" @onclick="() => _rules.Remove(rule)">Remove rule</button>
+                        </div>
+                    </div>
+                }
+                <button class="btn btn--sm" @onclick="() => _rules.Add(new())">Add rule</button>
+                @if (_error is not null)
+                {
+                    <div class="alert alert--danger" style="margin-top:var(--space-4);">@_error</div>
+                }
+            </div>
+        }
+    </div>
+</div>
+
+<div class="card">
+    <div class="card__head"><h2>Explain access</h2></div>
+    <div class="card__body">
+        <p class="muted" style="margin-bottom:var(--space-4);">
+            Ask why a request would be allowed or denied under a set of policies.
+        </p>
+        <div class="grid" style="grid-template-columns:2fr 1fr 2fr auto; gap:var(--space-3); align-items:end;">
+            <div class="field" style="margin:0;">
+                <label class="field__label">Path</label>
+                <input class="input mono" @bind="_xPath" placeholder="secret/data/app/db" />
+            </div>
+            <div class="field" style="margin:0;">
+                <label class="field__label">Capability</label>
+                <select class="select" @bind="_xCap">
+                    @foreach (var c in AllCaps) { <option value="@c">@c</option> }
+                </select>
+            </div>
+            <div class="field" style="margin:0;">
+                <label class="field__label">Policies (comma-separated)</label>
+                <input class="input mono" @bind="_xPolicies" placeholder="app-read, ops" />
+            </div>
+            <button class="btn btn--primary" disabled="@_xBusy" @onclick="Explain">Explain</button>
+        </div>
+        @if (_explain is not null)
+        {
+            <div class="alert @(_explain.Allowed ? "alert--info" : "alert--warn")" style="margin-top:var(--space-4);">
+                <strong>@(_explain.Allowed ? "Allowed" : "Denied")</strong> — @_explain.Explanation
+            </div>
+        }
+        @if (_xError is not null)
+        {
+            <div class="alert alert--danger" style="margin-top:var(--space-4);">@_xError</div>
+        }
+    </div>
+</div>
+
+@code {
+    private static readonly string[] AllCaps = { "create", "read", "update", "delete", "list", "sudo", "deny" };
+
+    private List<string> _names = new();
+    private string _name = "";
+    private bool _editing;
+    private bool _isNew;
+    private List<RuleModel> _rules = new();
+    private bool _busy;
+    private string? _error;
+
+    private string _xPath = "";
+    private string _xCap = "read";
+    private string _xPolicies = "";
+    private ExplainDto? _explain;
+    private bool _xBusy;
+    private string? _xError;
+
+    private sealed class RuleModel
+    {
+        public string Path { get; set; } = "";
+        public HashSet<string> Caps { get; } = new();
+    }
+
+    protected override Task OnInitializedAsync() => LoadNames();
+
+    private async Task LoadNames()
+    {
+        try { _names = (await Api.PoliciesAsync()).ToList(); }
+        catch (Exception ex) { _error = ex.Message; }
+    }
+
+    private async Task Select(string name)
+    {
+        _error = null;
+        try
+        {
+            var p = await Api.PolicyAsync(name);
+            _name = name; _isNew = false; _editing = true;
+            _rules = (p?.Rules ?? new()).Select(r =>
+            {
+                var m = new RuleModel { Path = r.Path };
+                foreach (var c in r.Capabilities) m.Caps.Add(c);
+                return m;
+            }).ToList();
+            if (_rules.Count == 0) _rules.Add(new());
+        }
+        catch (Exception ex) { _error = ex.Message; }
+    }
+
+    private void StartNew()
+    {
+        _name = ""; _isNew = true; _editing = true; _error = null;
+        _rules = new() { new() };
+    }
+
+    private void ToggleCap(RuleModel rule, string cap, ChangeEventArgs e)
+    {
+        if (e.Value is true) rule.Caps.Add(cap); else rule.Caps.Remove(cap);
+    }
+
+    private async Task Save()
+    {
+        if (string.IsNullOrWhiteSpace(_name)) { _error = "Policy name is required."; return; }
+        var rules = _rules.Where(r => !string.IsNullOrWhiteSpace(r.Path))
+            .Select(r => new PolicyRuleDto { Path = r.Path.Trim(), Capabilities = r.Caps.ToList() })
+            .ToList();
+        _busy = true; _error = null;
+        try
+        {
+            await Api.PutPolicyAsync(_name.Trim(), rules);
+            await LoadNames();
+            _isNew = false;
+        }
+        catch (Exception ex) { _error = ex.Message; }
+        finally { _busy = false; }
+    }
+
+    private async Task Explain()
+    {
+        _xBusy = true; _xError = null; _explain = null;
+        try
+        {
+            var policies = _xPolicies.Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
+            _explain = await Api.ExplainAsync(_xPath.Trim(), _xCap, policies);
+        }
+        catch (Exception ex) { _xError = ex.Message; }
+        finally { _xBusy = false; }
+    }
+}

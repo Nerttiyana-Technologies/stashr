@@ -1,0 +1,100 @@
+@page "/"
+@inject StashrApi Api
+@inject AppState App
+
+<PageTitle>Dashboard — stashr</PageTitle>
+
+<div class="page-head">
+    <h1>Dashboard</h1>
+    <p class="muted">Overview of this stashr instance.</p>
+</div>
+
+<div class="grid grid--stats" style="margin-bottom: var(--space-5);">
+    <div class="stat">
+        <div class="stat__label">Seal status</div>
+        <div class="stat__value" style="display:flex;align-items:center;gap:10px;">
+            <span class="pill pill--ok">Unsealed</span>
+        </div>
+        <div class="stat__sub">Master key is in memory; the engine can serve requests.</div>
+    </div>
+    <div class="stat">
+        <div class="stat__label">Version</div>
+        <div class="stat__value">@(_health?.Version ?? "…")</div>
+        <div class="stat__sub">Reported by <code>/v1/sys/health</code>.</div>
+    </div>
+    <div class="stat">
+        <div class="stat__label">Mounted engines</div>
+        <div class="stat__value">@(_mounts?.Count.ToString() ?? "…")</div>
+        <div class="stat__sub">@MountSummary</div>
+    </div>
+    <div class="stat">
+        <div class="stat__label">Audit chain</div>
+        <div class="stat__value" style="display:flex;align-items:center;gap:10px;">
+            @if (_audit is null)
+            {
+                <span class="pill">checking…</span>
+            }
+            else if (_audit.Valid)
+            {
+                <span class="pill pill--ok">Intact</span>
+            }
+            else
+            {
+                <span class="pill pill--danger">Broken</span>
+            }
+        </div>
+        <div class="stat__sub">
+            @if (_audit is not null)
+            {
+                @($"{_audit.CheckedCount} entries verified")
+            }
+            else
+            {
+                @("HMAC hash-chain verification")
+            }
+        </div>
+    </div>
+</div>
+
+<div class="grid grid--2">
+    <div class="card">
+        <div class="card__head"><h2>Quick actions</h2></div>
+        <div class="card__body" style="display:flex;flex-wrap:wrap;gap:var(--space-3);">
+            <a class="btn btn--primary" href="secrets">Browse KV secrets</a>
+            <a class="btn" href="policies">Manage policies</a>
+            <a class="btn" href="access">Issue credentials</a>
+            <a class="btn" href="audit">Verify audit log</a>
+        </div>
+    </div>
+    <div class="card">
+        <div class="card__head"><h2>About this build</h2></div>
+        <div class="card__body">
+            <p class="muted" style="margin-bottom: var(--space-3);">
+                stashr is a fully .NET secrets engine. This console talks to the same
+                Vault-compatible <code>/v1</code> API used by the CLI and SDK.
+            </p>
+            <div class="alert alert--warn">
+                Pre-audit release (v0.9.0). Not yet independently security-audited — avoid
+                storing crown-jewel production secrets until the audit completes.
+            </div>
+        </div>
+    </div>
+</div>
+
+@code {
+    private HealthDto? _health;
+    private IReadOnlyList<MountDto>? _mounts;
+    private AuditVerifyDto? _audit;
+
+    private string MountSummary =>
+        _mounts is null ? "loading…"
+        : _mounts.Count == 0 ? "none"
+        : string.Join(" · ", _mounts.Select(m => m.Type).Distinct());
+
+    protected override async Task OnInitializedAsync()
+    {
+        try { _health = await Api.HealthAsync(); } catch { }
+        try { _mounts = await Api.MountsAsync(); } catch { }
+        try { _audit = await Api.AuditVerifyAsync(); } catch { }
+    }
+}

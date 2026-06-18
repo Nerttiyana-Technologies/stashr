@@ -1,0 +1,25 @@
+<Project Sdk="Microsoft.NET.Sdk.Web">
+
+  <!-- The stashr daemon: ASP.NET host exposing the Vault-compatible /v1 API (ADR-0002/0003).
+       Single modern target (it's the executable). Uses Synthetix for domain->DTO mapping;
+       the mapping manifest starts OFF and is enabled later as a CI gate (ADR-0013/0014). -->
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <SynthetixManifest>false</SynthetixManifest>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Synthetix" Version="0.1.0" PrivateAssets="all" ExcludeAssets="runtime" />
+    <!-- Hosts the Blazor WebAssembly admin console at /ui (ADR-0017). -->
+    <PackageReference Include="Microsoft.AspNetCore.Components.WebAssembly.Server" Version="10.0.0" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Stashr.Engine\Stashr.Engine.csproj" />
+    <ProjectReference Include="..\Stashr.Engines.Database\Stashr.Engines.Database.csproj" />
+    <ProjectReference Include="..\Stashr.Storage.InMemory\Stashr.Storage.InMemory.csproj" />
+    <ProjectReference Include="..\Stashr.Storage.Postgres\Stashr.Storage.Postgres.csproj" />
+    <ProjectReference Include="..\Stashr.Ui\Stashr.Ui.csproj" />
+  </ItemGroup>
+
+</Project>

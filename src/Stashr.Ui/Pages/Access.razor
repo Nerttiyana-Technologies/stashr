@@ -1,0 +1,152 @@
+@page "/access"
+@inject StashrApi Api
+@inject IJSRuntime JS
+
+<PageTitle>Auth &amp; tokens — stashr</PageTitle>
+
+<div class="page-head">
+    <h1>Auth &amp; tokens</h1>
+    <p class="muted">AppRole machine identity — issue role IDs and secret IDs for applications.</p>
+</div>
+
+<div class="grid grid--2">
+    <div class="card">
+        <div class="card__head"><h2>Create / update role</h2></div>
+        <div class="card__body">
+            <div class="field">
+                <label class="field__label">Role name</label>
+                <input class="input mono" @bind="_name" placeholder="e.g. payments-api" />
+            </div>
+            <div class="field">
+                <label class="field__label">Token policies (comma-separated)</label>
+                <input class="input mono" @bind="_policies" placeholder="app-read, ops" />
+            </div>
+            <div class="field">
+                <label class="field__label">Token TTL (seconds)</label>
+                <input class="input" type="number" min="60" @bind="_ttl" />
+            </div>
+            <button class="btn btn--primary" disabled="@_busy" @onclick="CreateRole">Create role</button>
+
+            @if (_roleId is not null)
+            {
+                <div class="field" style="margin-top:var(--space-4);">
+                    <label class="field__label">Role ID</label>
+                    <div class="copy-row">
+                        <code>@_roleId</code>
+                        <button class="btn btn--sm" @onclick="() => Copy(_roleId!)">Copy</button>
+                    </div>
+                </div>
+            }
+            @if (_error is not null)
+            {
+                <div class="alert alert--danger" style="margin-top:var(--space-4);">@_error</div>
+            }
+        </div>
+    </div>
+
+    <div class="card">
+        <div class="card__head"><h2>Issue secret ID</h2></div>
+        <div class="card__body">
+            <p class="muted" style="margin-bottom:var(--space-4);">
+                The secret ID is the application's password. Optionally response-wrap it for secure delivery.
+            </p>
+            <div class="field">
+                <label class="field__label">Role name</label>
+                <input class="input mono" @bind="_sidName" placeholder="payments-api" />
+            </div>
+            <div class="field">
+                <label class="field__label">Wrap TTL (seconds, optional)</label>
+                <input class="input" type="number" min="0" @bind="_wrapTtl" />
+            </div>
+            <div style="display:flex;gap:var(--space-2);">
+                <button class="btn" disabled="@_sidBusy" @onclick="LookupRoleId">Get role ID</button>
+                <button class="btn btn--primary" disabled="@_sidBusy" @onclick="GenerateSecretId">Generate secret ID</button>
+            </div>
+
+            @if (_lookupRoleId is not null)
+            {
+                <div class="field" style="margin-top:var(--space-4);">
+                    <label class="field__label">Role ID</label>
+                    <div class="copy-row"><code>@_lookupRoleId</code><button class="btn btn--sm" @onclick="() => Copy(_lookupRoleId!)">Copy</button></div>
+                </div>
+            }
+            @if (_secretId is not null)
+            {
+                <div class="field" style="margin-top:var(--space-4);">
+                    <label class="field__label">Secret ID</label>
+                    <div class="copy-row"><code>@_secretId</code><button class="btn btn--sm" @onclick="() => Copy(_secretId!)">Copy</button></div>
+                </div>
+            }
+            @if (_wrapToken is not null)
+            {
+                <div class="field" style="margin-top:var(--space-4);">
+                    <label class="field__label">Wrapping token (single use)</label>
+                    <div class="copy-row"><code>@_wrapToken</code><button class="btn btn--sm" @onclick="() => Copy(_wrapToken!)">Copy</button></div>
+                </div>
+            }
+            @if (_sidError is not null)
+            {
+                <div class="alert alert--danger" style="margin-top:var(--space-4);">@_sidError</div>
+            }
+        </div>
+    </div>
+</div>
+
+@code {
+    private string _name = "";
+    private string _policies = "";
+    private int _ttl = 3600;
+    private string? _roleId;
+    private bool _busy;
+    private string? _error;
+
+    private string _sidName = "";
+    private int _wrapTtl = 0;
+    private string? _lookupRoleId;
+    private string? _secretId;
+    private string? _wrapToken;
+    private bool _sidBusy;
+    private string? _sidError;
+
+    private async Task CreateRole()
+    {
+        if (string.IsNullOrWhiteSpace(_name)) { _error = "Role name is required."; return; }
+        _busy = true; _error = null; _roleId = null;
+        try
+        {
+            var policies = _policies.Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
+            _roleId = await Api.CreateAppRoleAsync(_name.Trim(), policies, _ttl);
+        }
+        catch (Exception ex) { _error = ex.Message; }
+        finally { _busy = false; }
+    }
+
+    private async Task LookupRoleId()
+    {
+        if (string.IsNullOrWhiteSpace(_sidName)) { _sidError = "Role name is required."; return; }
+        _sidBusy = true; _sidError = null; _lookupRoleId = null;
+        try
+        {
+            _lookupRoleId = await Api.GetRoleIdAsync(_sidName.Trim());
+            if (_lookupRoleId is null) _sidError = "Role not found.";
+        }
+        catch (Exception ex) { _sidError = ex.Message; }
+        finally { _sidBusy = false; }
+    }
+
+    private async Task GenerateSecretId()
+    {
+        if (string.IsNullOrWhiteSpace(_sidName)) { _sidError = "Role name is required."; return; }
+        _sidBusy = true; _sidError = null; _secretId = null; _wrapToken = null;
+        try
+        {
+            var env = await Api.GenerateSecretIdAsync(_sidName.Trim(), _wrapTtl > 0 ? _wrapTtl : null);
+            if (env.WrapInfo is { } w) _wrapToken = w.Token;
+            else _secretId = env.Data?.SecretId;
+        }
+        catch (Exception ex) { _sidError = ex.Message; }
+        finally { _sidBusy = false; }
+    }
+
+    private async Task Copy(string text) => await JS.InvokeVoidAsync("stashrClipboard.copy", text);
+}

@@ -1,0 +1,16 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <!-- The engine core: seal/unseal, KV, policy, audit, tokens. Depends on the ISecretStore
+       abstraction (ADR-0009), not on a concrete storage provider. Server-side, modern TFMs. -->
+  <PropertyGroup>
+    <TargetFrameworks>net10.0;net8.0</TargetFrameworks>
+    <PackageId>Stashr.Engine</PackageId>
+    <Description>The stashr secrets engine core (seal/unseal, KV, policy, audit, tokens).</Description>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Stashr.Core\Stashr.Core.csproj" />
+    <ProjectReference Include="..\Stashr.Crypto\Stashr.Crypto.csproj" />
+  </ItemGroup>
+
+</Project>

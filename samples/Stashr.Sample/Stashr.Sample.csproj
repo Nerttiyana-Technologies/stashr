@@ -1,0 +1,15 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <!-- A tiny console app demonstrating consumption of stashr via the SDK (ADR-0013). -->
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>net10.0</TargetFramework>
+    <IsPackable>false</IsPackable>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\src\Stashr.Client\Stashr.Client.csproj" />
+    <ProjectReference Include="..\..\src\Stashr.Configuration\Stashr.Configuration.csproj" />
+  </ItemGroup>
+
+</Project>

@@ -1,0 +1,15 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <!-- In-memory ISecretStore: for unit tests and the `-dev` mode 5-minute first run (ADR-0014).
+       Not for production. Server-side, so modern TFMs only. -->
+  <PropertyGroup>
+    <TargetFrameworks>net10.0;net8.0</TargetFrameworks>
+    <PackageId>Stashr.Storage.InMemory</PackageId>
+    <Description>Ephemeral in-memory secret store for stashr development and tests.</Description>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Stashr.Core\Stashr.Core.csproj" />
+  </ItemGroup>
+
+</Project>

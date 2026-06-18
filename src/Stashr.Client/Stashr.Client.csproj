@@ -1,0 +1,17 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <!-- The .NET client SDK (ADR-0013). Consumer-facing → multi-targeted incl. netstandard2.0
+       so .NET Framework apps (and the ConfigurationBuilder) can use it. Uses plain POCOs (no
+       records/required) to avoid down-level polyfills; HttpClient + System.Text.Json. -->
+  <PropertyGroup>
+    <TargetFrameworks>net10.0;net8.0;netstandard2.0</TargetFrameworks>
+    <PackageId>Stashr.Client</PackageId>
+    <Description>.NET client SDK for the stashr secrets engine — read and write secrets over the Vault-compatible HTTP API.</Description>
+    <IsPackable>true</IsPackable>
+  </PropertyGroup>
+
+  <ItemGroup Condition="'$(TargetFramework)' == 'netstandard2.0'">
+    <PackageReference Include="System.Text.Json" Version="9.0.0" />
+  </ItemGroup>
+
+</Project>

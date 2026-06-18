@@ -1,0 +1,60 @@
+@page "/mounts"
+@inject StashrApi Api
+
+<PageTitle>Mounts — stashr</PageTitle>
+
+<div class="page-head" style="display:flex;justify-content:space-between;align-items:flex-end;">
+    <div>
+        <h1>Mounts</h1>
+        <p class="muted">Secrets engines mounted on this instance, each isolated and encrypted at rest.</p>
+    </div>
+    <button class="btn" @onclick="Load">Refresh</button>
+</div>
+
+<div class="card">
+    <div class="card__body" style="padding:0;">
+        @if (_loading)
+        {
+            <p class="muted" style="padding:var(--space-5);">Loading…</p>
+        }
+        else if (_error is not null)
+        {
+            <div class="alert alert--danger" style="margin:var(--space-4);">@_error</div>
+        }
+        else if (_mounts.Count == 0)
+        {
+            <div class="empty-state"><p class="muted">No mounts reported.</p></div>
+        }
+        else
+        {
+            <table class="table">
+                <thead><tr><th>Path</th><th>Type</th></tr></thead>
+                <tbody>
+                    @foreach (var m in _mounts)
+                    {
+                        <tr>
+                            <td class="mono">@m.Path</td>
+                            <td><span class="pill pill--brand">@m.Type</span></td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        }
+    </div>
+</div>
+
+@code {
+    private List<MountDto> _mounts = new();
+    private bool _loading = true;
+    private string? _error;
+
+    protected override Task OnInitializedAsync() => Load();
+
+    private async Task Load()
+    {
+        _loading = true; _error = null;
+        try { _mounts = (await Api.MountsAsync()).ToList(); }
+        catch (Exception ex) { _error = ex.Message; }
+        finally { _loading = false; }
+    }
+}

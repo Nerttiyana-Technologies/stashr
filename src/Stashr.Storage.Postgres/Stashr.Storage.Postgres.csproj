@@ -1,0 +1,18 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <!-- PostgreSQL ISecretStore (ADR-0002/0007). Server-side, modern TFMs only. -->
+  <PropertyGroup>
+    <TargetFrameworks>net10.0;net8.0</TargetFrameworks>
+    <PackageId>Stashr.Storage.Postgres</PackageId>
+    <Description>PostgreSQL-backed secret store for stashr.</Description>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Npgsql" Version="10.0.3" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Stashr.Core\Stashr.Core.csproj" />
+  </ItemGroup>
+
+</Project>
