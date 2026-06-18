@@ -85,12 +85,18 @@ publishes the four NuGet packages (`Stashr.Client`, `Stashr.Configuration`,
 `ghcr.io/<owner>/stashr:<version>` + `:latest`, and attaches self-contained server binaries
 (linux-x64 / win-x64 / osx-arm64) to the GitHub Release.
 
-- [ ] **One-time prerequisite — (you):** add a repository secret **`NUGET_API_KEY`** (nuget.org API
-      key). GHCR uses the built-in `GITHUB_TOKEN` (no secret needed).
+- [ ] **One-time prerequisite — (you): NuGet Trusted Publishing (OIDC — no stored API key).**
+      On nuget.org → your username → **Trusted Publishing**, add a policy with
+      Repository Owner `Nerttiyana-Technologies`, Repository `stashr`, Workflow File `release.yml`
+      (file name only, no path). Then add a repo secret **`NUGET_USER`** = your nuget.org username
+      (profile name, *not* email). The workflow mints a short-lived key at run time via
+      `NuGet/login@v1`; GHCR uses the built-in `GITHUB_TOKEN` (no secret needed).
+      > Private repos: the policy stays "pending" for 7 days until the first successful publish locks it in.
 - [ ] After tagging, watch the **release** workflow succeed; verify the packages appear on nuget.org
       and the image on GHCR.
 
-**Manual fallback — (you):**
+**Manual fallback — (you):** API keys are discouraged for automation but still work for one-off
+command-line pushes (generate one at nuget.org → API keys → "force API keys").
 
 ```bash
 VERSION=0.9.0
