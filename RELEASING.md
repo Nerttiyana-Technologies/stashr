@@ -42,7 +42,7 @@ docker build -t stashr:<version> .              # multi-stage image builds, runs
 docker compose up --build                        # /ui reachable; root token printed
 dotnet pack src/Stashr.Cli -c Release            # produces the dotnet tool package
 dotnet publish src/Stashr.Server -c Release -r linux-x64 --self-contained \
-  -p:PublishSingleFile=true -o ./publish          # self-contained binary runs
+  -o ./publish                                     # self-contained build runs (no runtime needed)
 ```
 
 - [ ] Docker image builds and serves the API + `/ui`.

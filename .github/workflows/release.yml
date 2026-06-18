@@ -73,6 +73,7 @@ jobs:
   binaries:
     runs-on: ubuntu-latest
     strategy:
+      fail-fast: false          # one RID failing must not cancel the others
       matrix:
         rid: [linux-x64, win-x64, osx-arm64]
     steps:
@@ -80,12 +81,16 @@ jobs:
       - uses: actions/setup-dotnet@v4
         with:
           global-json-file: global.json
+      - name: Install wasm-tools workload   # the server hosts the Blazor WASM UI
+        run: dotnet workload install wasm-tools
       - name: Derive version
         run: echo "VERSION=${GITHUB_REF_NAME#v}" >> "$GITHUB_ENV"
+      # Self-contained (no runtime needed on the host). NOT single-file: that property would
+      # cascade into the referenced Blazor WASM client, which can't be a desktop single-file.
       - name: Publish self-contained server
         run: |
           dotnet publish src/Stashr.Server -c Release -r ${{ matrix.rid }} \
-            --self-contained -p:PublishSingleFile=true -p:Version="$VERSION" \
+            --self-contained -p:Version="$VERSION" \
             -o "publish/${{ matrix.rid }}"
       - name: Package
         run: |
