@@ -30,8 +30,18 @@ jobs:
       - name: Build (Release)
         run: dotnet build --no-restore -c Release
 
-      - name: Test (Release)
+      # Linux runners have Docker (Linux containers) → run the full suite incl. Testcontainers.
+      - name: Test — full incl. integration (Linux)
+        if: runner.os == 'Linux'
         run: dotnet test --no-build -c Release --verbosity normal
+
+      # Windows runners can't pull Linux images (postgres:16-alpine) → skip the Docker-backed
+      # integration projects; still exercises the Win32 SecureMemory P/Invoke via the unit tests.
+      - name: Test — unit only, no Docker (Windows)
+        if: runner.os == 'Windows'
+        run: >-
+          dotnet test --no-build -c Release --verbosity normal
+          --filter "FullyQualifiedName!~Stashr.Storage.Postgres.Tests&FullyQualifiedName!~Stashr.Engines.Database.Tests"
 
   supply-chain:
     name: dependency scan
