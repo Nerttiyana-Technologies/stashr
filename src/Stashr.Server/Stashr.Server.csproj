@@ -11,7 +11,7 @@
   <ItemGroup>
     <PackageReference Include="Synthetix" Version="0.1.0" PrivateAssets="all" ExcludeAssets="runtime" />
     <!-- Hosts the Blazor WebAssembly admin console at /ui (ADR-0017). -->
-    <PackageReference Include="Microsoft.AspNetCore.Components.WebAssembly.Server" Version="10.0.0" />
+    <PackageReference Include="Microsoft.AspNetCore.Components.WebAssembly.Server" Version="10.0.13" />
   </ItemGroup>
 
   <ItemGroup>
